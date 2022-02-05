@@ -2,14 +2,16 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
+from unittest import result
 from apps import db, login_manager
 from apps.home import blueprint
 from flask import render_template, redirect, request, url_for, Response
 from flask_login import login_required
 from jinja2 import TemplateNotFound
 from apps.home.forms import CreateStudent
-from apps.authentication.models import Students,Users
+from apps.authentication.models import InfoClass, Students,Users
 import datetime
+from sqlalchemy import cast, Date, extract
 @blueprint.route('/index')
 @login_required
 def index():
@@ -101,6 +103,26 @@ def DeleteStudent(msv):
 def delete_student(msv):
     DeleteStudent(msv)
     return redirect(url_for('home_blueprint.list_student'))
+
+@blueprint.route('/info_class', methods=['GET', 'POST'])
+@login_required
+def info_class():
+    info=[]
+    if 'search_time' in request.form:
+        item=request.form
+        timeinf= item["info-time"].split('-')
+        
+        info=db.session.query(InfoClass).filter(extract('year', InfoClass.time) == timeinf[2],extract('month', InfoClass.time) == timeinf[1],extract('day', InfoClass.time) == timeinf[0]).all()
+        
+    segment = get_segment(request)
+    table = InfoClass.query.all()
+    result=[]
+    for time in table:
+        a=time.time.date()
+        result.append(a)
+    result=list(set(result))
+
+    return render_template('home/info-class.html', segment=segment, times=result, infos=info)
 
 @blueprint.route('/<template>')
 @login_required

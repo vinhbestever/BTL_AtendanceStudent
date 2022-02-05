@@ -1,0 +1,72 @@
+
+{% extends "layouts/base-admin.html" %}
+
+{% block title %} UI Tables {% endblock %} 
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="pcoded-content">
+    <div class="pcoded-inner-content">
+        
+        <div class="main-body">
+            <div class="page-wrapper">
+                <!-- [ Main Content ] start -->
+                <div class="row">
+                    
+                    <!-- [ stiped-table ] start -->
+                    <div class="col-xl-12">
+                        <div class="card">
+                            
+                            <div class="card-block table-border-style">
+                                
+                                <div class="table-responsive">
+                                    
+                                    <form action="/info_class" method="post" class="row">
+                                        <select class="form-control" name="info-time" style="width: 30%;margin-left: 20px;">
+                                            {% for time in times %}
+                                            <option>{{time.day}}-{{time.month}}-{{time.year}}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" name="search_time" class="btn btn-info" title="Search" data-toggle="tooltip" style="margin-left: 10px;">Search</button>
+                                    </form>
+                                    
+                                    
+                                    
+                                    <br>
+                                    <br>
+                                    <table class="table table-striped">
+                                        <thead>
+                                           <td>Mã sinh viên</td>
+                                           <td>Thời gian</td>
+                                           <td>Trạng thái</td>
+                                           
+                                        </thead>
+                                        {% for info in infos %}
+                                        <tr>
+                                            <td>{{ info.msv }}</td>
+                                            <td>{{ info.time }}</td>
+                                            <td>{{ info.status }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                        </tbody>
+                                     </table>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- [ stiped-table ] end -->
+                </div>
+                <!-- [ Main Content ] end -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

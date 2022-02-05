@@ -5,6 +5,7 @@ Copyright (c) 2019 - present AppSeed.us
 from turtle import circle
 import pandas as pd
 import numpy as np
+import datetime
 import urllib.request
 import cv2
 from flask import render_template, redirect, request, url_for, Response, session
@@ -19,7 +20,7 @@ from apps import db, login_manager
 from apps.authentication import blueprint
 from flask import current_app
 from apps.authentication.forms import LoginForm, CreateAccountForm
-from apps.authentication.models import Users,Students
+from apps.authentication.models import Users,Students,InfoClass
 from apps.authentication.util import verify_pass
 from run import app
 
@@ -45,7 +46,8 @@ def gen_frames(students):
     # fv.set_detector(fd)
 
     # with app.app_context():
-    #     student = Students('A36429','Nguyễn Đức Vinh','0963442804','vinh123799@gmail.com','2001-06-07','TT','https://scontent.fhan5-9.fna.fbcdn.net/v/t39.30808-6/271153042_1012777712609393_6682807788287512087_n.jpg?_nc_cat=109&ccb=1-5&_nc_sid=09cbfe&_nc_ohc=okMXDbGEy14AX9Q5Ydc&_nc_ht=scontent.fhan5-9.fna&oh=00_AT_QjLM3F2tKXBT3_pKSdFP4QOsDaSOV_6B5I-Ky4wm1qg&oe=61FAD404')
+    #     x = datetime.datetime.now()
+    #     student = InfoClass(2,'A36429',x,'Out')
     #     db.session.add(student)
     #     db.session.commit()
     
