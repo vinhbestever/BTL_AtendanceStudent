@@ -23,85 +23,131 @@ from apps.authentication.forms import LoginForm, CreateAccountForm
 from apps.authentication.models import Users,Students,InfoClass
 from apps.authentication.util import verify_pass
 from run import app
+import tensorflow as tf
+from multiprocessing import Pool
+import itertools
 
 @blueprint.route('/')
 def route_default():
     return redirect(url_for('authentication_blueprint.attendance'))
 
 #-------------------------------------------------------------------------------------
+global fd
+fd = face_detector.FaceAlignmentDetector(
+    lmd_weights_path="./models/detector/FAN/2DFAN-4_keras.h5"# 2DFAN-4_keras.h5, 2DFAN-1_keras.h5
+)
+global fv
+fv = FaceVerifier(classes=512, extractor = "facenet")
+fv.set_detector(fd)
+global students
+students=Students.query.all()
+global img_crop
+global graph
+graph = tf.get_default_graph()
+
+
 def resize_image(im, max_size=768):
     if np.max(im.shape) > max_size:
         ratio = max_size / np.max(im.shape)
         print(f"Resize image to ({str(int(im.shape[1]*ratio))}, {str(int(im.shape[0]*ratio))}).")
         return cv2.resize(im, (0,0), fx=ratio, fy=ratio)
     return im
-def gen_frames(students):
+def addInfo():
+    with app.app_context():
+        x = datetime.datetime.now()
+        student = InfoClass(3,'A36429',x,'In')
+        db.session.add(student)
+        db.session.commit()
+def Verifiert(im1,im2):
+    global fv  
+    with graph.as_default():
+        result, distance = fv.verify(im1, im2, threshold=0.5, with_detection=False, with_alignment=False, return_distance=True)
+    return result,distance
+def VerifierStudent(student): 
+    global fv  
+    print('1')
+    url=student.img
+    response = urllib.request.urlopen(url)
+    image = np.asarray(bytearray(response.read()), dtype="uint8")
+    im_known = cv2.imdecode(image, cv2.IMREAD_COLOR)
+    im_known = resize_image(im_known)
+    kq=[]
+    # result, distance=Verifiert(im_known,img_crop)
+    print('2')
+    return kq
+
+def gen_frames():
+    global students
+    global img_crop
     camera = cv2.VideoCapture(0)
     camera.set(cv2.CAP_PROP_FPS, 5)
-
-    # fd = face_detector.FaceAlignmentDetector(
-    #     lmd_weights_path="./models/detector/FAN/2DFAN-4_keras.h5"# 2DFAN-4_keras.h5, 2DFAN-1_keras.h5
-    # )
-    # fv = FaceVerifier(classes=512, extractor="facenet")
-    # fv.set_detector(fd)
-
-    # with app.app_context():
-    #     x = datetime.datetime.now()
-    #     student = InfoClass(2,'A36429',x,'Out')
-    #     db.session.add(student)
-    #     db.session.commit()
-    
+   
     while True:
         success,frame=camera.read()
         
         if not success:
             break
         else:
-            # imgS=cv2.resize(frame,(0,0),None,0.25,0.25)
-            # imgS=cv2.cvtColor(imgS,cv2.COLOR_BGR2RGB)
-            # bboxes = fd.detect_face(imgS, with_landmarks=False)
+            imgS=cv2.resize(frame,(0,0),None,0.25,0.25)
+            imgS=cv2.cvtColor(imgS,cv2.COLOR_BGR2RGB)
+            with graph.as_default():
+                bboxes = fd.detect_face(imgS, with_landmarks=False)
 
             
-            # for i in bboxes:
-            # #     # Display detected face
-            #     if (len(i)>0):
-            #         x0, y0, x1, y1,score = i
-            #         x0, y0, x1, y1=x0*4, y0*4, x1*4, y1*4
-            #         x0, y0, x1, y1 = map(int, [x0, y0, x1, y1])
+            for i in bboxes:
+            #     # Display detected face
+                if (len(i)>0):
+                    x0, y0, x1, y1,score = i
+                    x0, y0, x1, y1=x0*4, y0*4, x1*4, y1*4
+                    x0, y0, x1, y1 = map(int, [x0, y0, x1, y1])
 
-            #         width1,width2,height1,height2=x0-50,x1+10,y0-20,y1+20
-            #         if(width1<0):
-            #             width1=0
-            #         if(height1<0):
-            #             height1=0
-            #         if(width2>frame.shape[0]):
-            #             width2=frame.shape[0]
-            #         if(height2>frame.shape[1]):
-            #             height2=frame.shape[1]
-            #         img_crop = frame[width1:width2, height1:height2, :]
-            #         img_crop = resize_image(img_crop) 
-            #         # img_crop=cv2.cvtColor(img_crop,cv2.COLOR_BGR2RGB)
-            #         distance_test=10000
-            #         name="Unknown"
-            #         for student in students:
-            #             url=student.img
-            #             response = urllib.request.urlopen(url)
-            #             image = np.asarray(bytearray(response.read()), dtype="uint8")
-            #             im_known = cv2.imdecode(image, cv2.IMREAD_COLOR)
-            #             im_known = resize_image(im_known)
-            #             # im_known=cv2.cvtColor(im_known,cv2.COLOR_BGR2RGB)
-            #             result, distance = fv.verify(im_known, img_crop, threshold=0.5, with_detection=False, with_alignment=False, return_distance=True)
-            #             # print(student.msv,student.img,result,distance)
-                        
-            #             if distance<distance_test:
-            #                 name=student.msv
-            #             distance_test=distance
-                        
+                    width1,width2,height1,height2=x0-50,x1+10,y0-20,y1+20
+                    if(width1<0):
+                        width1=0
+                    if(height1<0):
+                        height1=0
+                    if(width2>frame.shape[0]):
+                        width2=frame.shape[0]
+                    if(height2>frame.shape[1]):
+                        height2=frame.shape[1]
+                    img_crop = frame[width1:width2, height1:height2, :]
+                    img_crop = resize_image(img_crop) 
+                    img_crop=cv2.cvtColor(img_crop,cv2.COLOR_BGR2RGB)
+                    distance_test=10000
+                    name="Unknown"
 
-            #         cv2.rectangle(frame, (y0, x0), (y1, x1), (200, 0, 200), 4)
-            #         cv2.rectangle(frame, (y0, x0 + 35), (y1, x0), (200, 0, 200), cv2.FILLED)
-            #         font = cv2.FONT_HERSHEY_DUPLEX
-            #         cv2.putText(frame, name , (y0 + 6, x0 +25), font, 1.0, (255, 255, 255), 1)
+                    # pool = Pool()
+                    # result=pool.map(VerifierStudent, students)
+                    
+                    # pool.close()
+                    # pool.join()
+
+                    
+                    for student in students:
+                        
+                        url=student.img
+                        response = urllib.request.urlopen(url)
+                        image = np.asarray(bytearray(response.read()), dtype="uint8")
+                        im_known = cv2.imdecode(image, cv2.IMREAD_COLOR)
+                        im_known = resize_image(im_known)
+                        
+                        # with graph.as_default():
+                        #     result, distance = fv.verify(im_known, img_crop, threshold=0.5, with_detection=False, with_alignment=False, return_distance=True)
+                        # print("aaaaaaaaaaaaaaaaaaa")
+                        result, distance=Verifiert(im_known,img_crop)
+                        
+                        if distance<distance_test:
+                            name=student.msv
+                        distance_test=distance
+                        
+                    if(distance_test>1.0):
+                        name="Unknown"
+
+                    cv2.rectangle(frame, (y0, x0), (y1, x1), (200, 0, 200), 4)
+                    cv2.rectangle(frame, (y0, x0 + 35), (y1, x0), (200, 0, 200), cv2.FILLED)
+                    font = cv2.FONT_HERSHEY_DUPLEX
+                    cv2.putText(frame, name , (y0 + 6, x0 +25), font, 1.0, (255, 255, 255), 1)
+                    cv2.putText(frame, str(round(distance_test,4)) , (y0 + 6, x0 -10), font, 1.0, (255, 0, 255), 1)
             ret,buffer=cv2.imencode('.jpg',frame)
             frame=buffer.tobytes()
 
@@ -113,8 +159,7 @@ def attendance():
     return render_template('face_recognition/face.html')
 @blueprint.route('/video_feed')
 def video_feed():
-    students=Students.query.all()
-    return Response(gen_frames(students), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 def addinform():
     students=Students.query.all()

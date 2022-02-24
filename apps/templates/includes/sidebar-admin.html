@@ -34,8 +34,8 @@
                     <li data-username="" class="nav-item pcoded-hasmenu">
                         <a href="javascript:" class="nav-link "><span class="pcoded-micon"><i class="feather icon-user"></i></span><span class="pcoded-mtext">Quản lý tài khoản</span></a>
                         <ul class="pcoded-submenu">
-                            <li class=""><a href="" class="">Danh sách tài khoản</a></li>
-                            <li class=""><a href="" class="">Thêm tài khoản mới</a></li>
+                            <li class=""><a href="/list-user" class="">Danh sách tài khoản</a></li>
+                            <li class=""><a href="/register.html" class="">Thêm tài khoản mới</a></li>
                             
                         </ul>
                     </li>
@@ -43,16 +43,20 @@
                         <label>Thống kê</label>
                     </li>
                     <li data-username="Table bootstrap datatable footable" 
-                        class="nav-item {% if 'ui-tables' in segment %} active {% endif %}">
-                        <a href="/ui-tables.html" class="nav-link "><span class="pcoded-micon"><i class="feather icon-check-square"></i></span><span class="pcoded-mtext">Điểm danh</span></a>
+                        class="nav-item {% if 'attendance_check' in segment %} active {% endif %}">
+                        <a href="/attendance_check" class="nav-link "><span class="pcoded-micon"><i class="feather icon-check-square"></i></span><span class="pcoded-mtext">Điểm danh</span></a>
                     </li>
                     <li data-username="Table bootstrap datatable footable" 
                         class="nav-item {% if 'info_class' in segment %} active {% endif %}">
                         <a href="/info_class" class="nav-link "><span class="pcoded-micon"><i class="feather icon-file-text"></i></span><span class="pcoded-mtext">Số giờ học của sinh viên</span></a>
                     </li>
                     <li data-username="Table bootstrap datatable footable" 
-                        class="nav-item {% if 'ui-tables' in segment %} active {% endif %}">
-                        <a href="/ui-tables.html" class="nav-link "><span class="pcoded-micon"><i class="feather icon-bar-chart-2"></i></span><span class="pcoded-mtext">Tỷ lệ cấm thi</span></a>
+                        class="nav-item {% if 'summany_study' in segment %} active {% endif %}">
+                        <a href="/summany_study" class="nav-link "><span class="pcoded-micon"><i class="feather icon-star-on"></i></span><span class="pcoded-mtext">Tổng kết môn học</span></a>
+                    </li>
+                    <li data-username="Table bootstrap datatable footable" 
+                        class="nav-item {% if 'chart_analysis' in segment %} active {% endif %}">
+                        <a href="/chart_analysis" class="nav-link "><span class="pcoded-micon"><i class="feather icon-bar-chart-2"></i></span><span class="pcoded-mtext">Biểu đồ phân tích</span></a>
                     </li>
                     <li data-username="Disabled Menu" class="nav-item">
                         <a href="{{ url_for('authentication_blueprint.logout') }}" class="nav-link">

@@ -5,7 +5,8 @@ Copyright (c) 2019 - present AppSeed.us
 
 import os
 from decouple import config
-
+from models.detector import face_detector
+from models.verifier.face_verifier import FaceVerifier
 class Config(object):
 
     basedir = os.path.abspath(os.path.dirname(__file__))
@@ -40,7 +41,11 @@ class ProductionConfig(Config):
 class DebugConfig(Config):
     DEBUG = True
 
-
+# fd = face_detector.FaceAlignmentDetector(
+#     lmd_weights_path="./models/detector/FAN/2DFAN-4_keras.h5"# 2DFAN-4_keras.h5, 2DFAN-1_keras.h5
+# )
+# fv = FaceVerifier(classes=512, extractor="facenet")
+# fv.set_detector(fd)
 # Load all possible configurations
 config_dict = {
     'Production': ProductionConfig,

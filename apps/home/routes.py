@@ -2,6 +2,7 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
+from itertools import count
 from unittest import result
 from apps import db, login_manager
 from apps.home import blueprint
@@ -9,9 +10,14 @@ from flask import render_template, redirect, request, url_for, Response
 from flask_login import login_required
 from jinja2 import TemplateNotFound
 from apps.home.forms import CreateStudent
-from apps.authentication.models import InfoClass, Students,Users
+from apps.authentication.models import InfoClass, Students,Users, Attendance,SummaryStudy
+from apps.authentication.forms import EditAccountForm
 import datetime
 from sqlalchemy import cast, Date, extract
+import hashlib
+import binascii
+import os
+
 @blueprint.route('/index')
 @login_required
 def index():
@@ -124,6 +130,125 @@ def info_class():
 
     return render_template('home/info-class.html', segment=segment, times=result, infos=info)
 
+@blueprint.route('/attendance_check', methods=['GET', 'POST'])
+@login_required
+def attendance_check():
+    info=[]
+    if 'search_date' in request.form:
+        item=request.form
+        timeinf= item["info-time"].split('-')
+        info=db.session.query(Attendance).filter(extract('year', Attendance.date) == timeinf[2],extract('month', Attendance.date) == timeinf[1],extract('day', Attendance.date) == timeinf[0]).all()
+        
+        if not info:
+            stu=Students.query.all()
+            for sv in stu:
+                # print(sv.msv)
+                temp=db.session.query(InfoClass).filter(extract('year', InfoClass.time) == timeinf[2]\
+                    ,extract('month', InfoClass.time) == timeinf[1],extract('day', InfoClass.time)\
+                    == timeinf[0],InfoClass.msv==sv.msv).all()
+                if not temp:
+                    status=False                   
+                else:
+                    sum=0
+                    for i in range(len(temp),2):
+                        sum+=temp[i+1]-temp[i]
+                    if sum>=0.5*3600:
+                        status=True
+                    else:
+                        status=False
+                id=db.session.query(Attendance).count()
+                atten_time=datetime.datetime(int(timeinf[2]), int(timeinf[1]), int(timeinf[0]))
+                student = Attendance(id+1,sv.msv,status,atten_time)
+                db.session.add(student)
+                db.session.commit()
+            info=db.session.query(Attendance).filter(extract('year', Attendance.date) == timeinf[2],extract('month', Attendance.date) == timeinf[1],extract('day', Attendance.date) == timeinf[0]).all()
+    segment = get_segment(request)
+    table = InfoClass.query.all()
+    result=[]
+    for time in table:
+        a=time.time.date()
+        result.append(a)
+    result=list(set(result))
+    
+    return render_template('home/list-attendance.html', segment=segment, times=result, infos=info)
+
+@blueprint.route('/summany_study', methods=['GET', 'POST'])
+@login_required
+def summany_study():
+    segment = get_segment(request)
+    msg=False
+    sum=[]
+    if 'study_summany' in request.form:
+        sum=SummaryStudy.query.all()
+        if not sum:
+            stu=Students.query.all()
+            for sv in stu:
+                temp=db.session.query(Attendance).filter(Attendance.msv==sv.msv).count()
+                print(temp)
+                if temp>=6:
+                    status=True
+                else:
+                    status=False
+                id=db.session.query(SummaryStudy).count()
+                student = SummaryStudy(id+1,sv.msv,status)
+                db.session.add(student)
+                db.session.commit()
+            sum=SummaryStudy.query.all()
+        msg=True
+    if 'delete_summany' in request.form:
+        db.session.query(SummaryStudy).delete()
+        db.session.commit()
+        msg=False
+    return render_template('home/summany.html', segment=segment, msg=msg, sum=sum)
+@blueprint.route('/list-user', methods=['GET', 'POST'])
+@login_required
+def list_user():
+    segment = get_segment(request)
+    return render_template('home/list-account.html', rows=Users.query.all(), segment=segment)
+def DeleteUser(id):
+    sv=Users.query.filter_by(id=id).first()
+    db.session.delete(sv)
+    db.session.commit()
+@blueprint.route('/delete_user/<int:id>')
+@login_required
+def delete_user(id):
+    DeleteUser(id)
+    return redirect(url_for('home_blueprint.list_user'))
+@blueprint.route('/edit_user/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_user(id):
+    create_student_form = EditAccountForm(request.form)
+    segment = get_segment(request)
+    user = Users.query.filter_by(id=id).first()
+    if 'edit_user' in request.form:
+        username=request.form['username']
+        email=request.form['email']
+        a=request.form['password']
+        salt = hashlib.sha256(os.urandom(60)).hexdigest().encode('ascii')
+        pwdhash = hashlib.pbkdf2_hmac('sha512', a.encode('utf-8'),
+                                    salt, 100000)
+        pwdhash = binascii.hexlify(pwdhash)
+        password=(salt + pwdhash)
+        role=request.form['role']
+
+        x=db.session.query(Users).filter_by(id=id).first()
+        x.username=username
+        x.email=email
+        x.password=password
+        x.role=role
+        db.session.commit()
+        return render_template('home/edit-user.html',
+                               msg='Sửa thông tin thành công',
+                               success=True,
+                               form=create_student_form, segment=segment,user=user)
+    else:
+        return render_template('home/edit-user.html', form=create_student_form, segment=segment,user=user)
+@blueprint.route('/chart_analysis')
+@login_required
+def chart_analysis():
+    segment = get_segment(request)
+    a=100
+    return render_template('home/chart-analysis.html', segment=segment, a=a)
 @blueprint.route('/<template>')
 @login_required
 def route_template(template):

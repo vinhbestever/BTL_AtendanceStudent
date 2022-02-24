@@ -1,0 +1,90 @@
+{% extends "layouts/base-admin.html" %}
+
+{% block title %} Edit User {% endblock %} 
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %}
+
+{% block content %}
+
+<div class="pcoded-content">
+    <div class="pcoded-inner-content">
+        
+        
+        <div class="main-body">
+            <div class="page-wrapper">
+                <!-- [ Main Content ] start -->
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Sửa thông tin User vào Form dưới</h5>
+                            </div>
+                            <div class="card-body">
+                                <h5>Thông tin User</h5>
+                                <hr>
+                                {% if success %}
+                                <span class="mb-0 text-muted" style="color: mediumspringgreen;">
+                                    {% if msg %}
+                                    <a type="button" class="btn btn-info" title="Quay về danh sách sinh viên" href="{{ url_for('home_blueprint.list_user') }}" data-toggle="tooltip">⟳ Quay lại</a>
+                                    <div class="i-block" data-clipboard-text="feather icon-check" data-filter="feather icon-check"  data-toggle="tooltip" title="">
+                                        <a style="color: mediumspringgreen;" class="feather icon-check">{{ msg | safe }}</a>
+                                    </div>
+                                    
+                                    {% endif %} 
+                                </span>
+                                {% else %}
+                                <span class="mb-0 text-muted" style="color: maroon;">
+                                    {% if msg %}
+                                    <div class="i-block" data-clipboard-text="feather icon-x" data-filter="feather icon-x"  data-toggle="tooltip" title="">
+                                        <a style="color: maroon;" class="feather icon-x">{{ msg | safe }}</a>
+                                    </div>
+                                    {% endif %} 
+                                </span>
+                                
+                                
+                                {% endif %}
+                                <div class="row">
+                                    <div class="col-md-6">
+                                    
+                                        <form role="form" method="post" action="">
+                                            {{ form.hidden_tag() }}  
+                                            
+                                            <div class="form-group">
+                                                <label>Username</label>
+                                                {{ form.username(placeholder="Username", class="form-control", value=user['username']) }}
+                                            </div>
+                                            
+                                            <div class="form-group">
+                                                <label for="exampleInputEmail1">Email</label>
+                                                {{ form.email(placeholder="Email", class="form-control", type="email", value=user.email) }}
+                                                <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Password</label>
+                                                {{ form.password(placeholder="Password", class="form-control",value=user['password']) }}
+                                            </div>
+                                    
+                                            <div class="form-group">
+                                                <label>Role</label>
+                                                {{ form.role(placeholder="Role", class="form-control",value=user['role']) }}
+                                            </div>
+                                            <button type="submit" name="edit_user" class="btn btn-primary">Submit</button>
+                                        </form>
+                                    
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- [ Main Content ] end -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}{% endblock javascripts %}

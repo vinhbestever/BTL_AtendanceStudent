@@ -4,7 +4,7 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 from flask_wtf import FlaskForm
-from wtforms import TextField, PasswordField, SelectField, FileField
+from wtforms import TextField, PasswordField, SelectField, FileField,StringField
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms.validators import Email, DataRequired
 
@@ -37,8 +37,23 @@ class CreateAccountForm(FlaskForm):
     #{'user', 'docter', 'worker', 'teacher'}
     role = SelectField('Role',
                              id='role_create',
-                             choices=[('user', 'user'), 
-                             ('docter', 'docter'),
-                             ('worker', 'worker'),
+                             choices=[ 
+                             ('student', 'student'),
+                             ('teacher', 'teacher'),
+                             ])
+class EditAccountForm(FlaskForm):
+    username = StringField('Username',
+                         id='username_create',
+                         validators=[DataRequired()])
+    email = StringField('Email',
+                      id='email_create',
+                      validators=[DataRequired(), Email()])
+    password = StringField('Password',
+                             id='pwd_create',
+                             validators=[DataRequired()])
+    role = SelectField('Role',
+                             id='role_create',
+                             choices=[ 
+                             ('student', 'student'),
                              ('teacher', 'teacher'),
                              ])

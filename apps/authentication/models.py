@@ -76,13 +76,15 @@ class Attendance(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     msv=db.Column(db.String(64),ForeignKey('Students.msv')) 
+    date=db.Column(db.DateTime())
     attendance=db.Column(db.Boolean()) 
     relat_atten = relationship("Students", back_populates="atten")
 
-    def __init__(self,id,msv,attendance):
+    def __init__(self,id,msv,attendance,date):
         self.id=id
         self.msv=msv
         self.attendance=attendance
+        self.date=date
 
 class InfoClass(db.Model):
     __tablename__ = 'InfoClass'

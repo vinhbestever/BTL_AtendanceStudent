@@ -9,8 +9,6 @@ from decouple import config
 
 from apps.config import config_dict
 from apps import create_app, db
-from models.detector import face_detector
-from models.verifier.face_verifier import FaceVerifier
 # WARNING: Don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
@@ -27,7 +25,6 @@ except KeyError:
 
 app = create_app(app_config)
 app.app_context().push()
-
 Migrate(app, db)
 
 if DEBUG:
