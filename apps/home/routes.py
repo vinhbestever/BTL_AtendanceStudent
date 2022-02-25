@@ -149,10 +149,10 @@ def attendance_check():
                 if not temp:
                     status=False                   
                 else:
-                    sum=0
-                    for i in range(len(temp),2):
-                        sum+=temp[i+1]-temp[i]
-                    if sum>=0.5*3600:
+                    sum=datetime.timedelta(minutes=0,seconds=0, microseconds=0)
+                    for i in range(0,len(temp),2):
+                        sum=sum+(temp[i+1].time-temp[i].time)
+                    if sum.total_seconds() / 60 >=30:
                         status=True
                     else:
                         status=False
@@ -243,33 +243,43 @@ def edit_user(id):
                                form=create_student_form, segment=segment,user=user)
     else:
         return render_template('home/edit-user.html', form=create_student_form, segment=segment,user=user)
+
 @blueprint.route('/chart_analysis')
 @login_required
 def chart_analysis():
     segment = get_segment(request)
-    atten_table=Attendance.query.all()
+    info_table=InfoClass.query.all()
     labels1=['0','1','2','3','4','5','6','7','8','9']
-    values1=[]
-    labels = [
-    'JAN', 'FEB', 'MAR', 'APR',
-    'MAY', 'JUN', 'JUL', 'AUG',
-    'SEP', 'OCT', 'NOV', 'DEC'
-    ]
-
-    values = [
-        967.67, 1190.89, 1079.75, 1349.19,
-        2328.91, 2504.28, 2873.83, 4764.87,
-        4349.29, 6458.30, 9907, 16297
-    ]
-
-    colors = [
-        "#F7464A", "#46BFBD", "#FDB45C", "#FEDCBA",
-        "#ABCDEF", "#DDDDDD", "#ABCABC", "#4169E1",
-        "#C71585", "#FF4500", "#FEDCBA", "#46BFBD"]
-    bar_labels=labels
-    bar_values=values
-
-    return render_template('home/chart-analysis.html', segment=segment, max=17000, labels=bar_labels, values=bar_values)
+    values1=[0,0,0,0,0,0,0,0,0,0]
+    stu=Students.query.all()
+    for sv in stu:
+        temp=db.session.query(Attendance).filter(Attendance.msv==sv.msv,Attendance.attendance==1).count()
+        values1[temp]+=1
+    labels2=[]
+    values2=[]
+    for sv in stu:
+        temp=db.session.query(InfoClass).filter(InfoClass.msv==sv.msv).all()
+        sum=datetime.timedelta(minutes=0,seconds=0, microseconds=0)
+        
+        for i in range(0,len(temp),2):
+            sum=sum+(temp[i+1].time-temp[i].time)
+        hour=sum.total_seconds() / 360   
+        labels2.append(sv.msv)  
+        values2.append(hour) 
+    labels3=[]
+    values3=[]    
+    for sv in stu:
+        temp=db.session.query(Attendance).filter(Attendance.msv==sv.msv,Attendance.attendance==1).count()
+        labels3.append(sv.msv)  
+        values3.append(temp) 
+    labels4=['Được thi','Cấm thi']
+    values4=[]
+    colors=["#46BFBD","#FF4500"]
+    temp1=db.session.query(SummaryStudy).filter(SummaryStudy.status==1).count()
+    temp2=db.session.query(SummaryStudy).filter(SummaryStudy.status==0).count()
+    values4.append(temp1)
+    values4.append(temp2)
+    return render_template('home/chart-analysis.html', segment=segment, labels1=labels1, values1=values1,labels2=labels2, values2=values2,labels3=labels3, values3=values3,set=zip(values4, labels4, colors))
 @blueprint.route('/<template>')
 @login_required
 def route_template(template):

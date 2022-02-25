@@ -52,12 +52,22 @@ def resize_image(im, max_size=768):
         print(f"Resize image to ({str(int(im.shape[1]*ratio))}, {str(int(im.shape[0]*ratio))}).")
         return cv2.resize(im, (0,0), fx=ratio, fy=ratio)
     return im
-def addInfo():
+def addInfo_In(msv):
     with app.app_context():
-        x = datetime.datetime.now()
-        student = InfoClass(3,'A36429',x,'In')
-        db.session.add(student)
-        db.session.commit()
+        if (db.session.query(InfoClass).filter(InfoClass.msv==msv).count()%2==0):
+            x = datetime.datetime.now()
+            id=db.session.query(InfoClass).count()
+            student = InfoClass(id+1,msv,x,'In')
+            db.session.add(student)
+            db.session.commit()
+def addInfo_Out(msv):
+    with app.app_context():
+        if (db.session.query(InfoClass).filter(InfoClass.msv==msv).count()%2==1):
+            x = datetime.datetime.now()
+            id=db.session.query(InfoClass).count()
+            student = InfoClass(id+1,msv,x,'Out')
+            db.session.add(student)
+            db.session.commit()
 def Verifiert(im1,im2):
     global fv  
     with graph.as_default():
@@ -65,7 +75,7 @@ def Verifiert(im1,im2):
     return result,distance
 def VerifierStudent(student): 
     global fv  
-    print('1')
+    # print('1')
     url=student.img
     response = urllib.request.urlopen(url)
     image = np.asarray(bytearray(response.read()), dtype="uint8")
@@ -73,7 +83,7 @@ def VerifierStudent(student):
     im_known = resize_image(im_known)
     kq=[]
     # result, distance=Verifiert(im_known,img_crop)
-    print('2')
+    # print('2')
     return kq
 
 def gen_frames():
@@ -81,7 +91,7 @@ def gen_frames():
     global img_crop
     camera = cv2.VideoCapture(0)
     camera.set(cv2.CAP_PROP_FPS, 5)
-   
+    num_people=1000
     while True:
         success,frame=camera.read()
         
@@ -93,7 +103,6 @@ def gen_frames():
             with graph.as_default():
                 bboxes = fd.detect_face(imgS, with_landmarks=False)
 
-            
             for i in bboxes:
             #     # Display detected face
                 if (len(i)>0):
@@ -142,18 +151,27 @@ def gen_frames():
                         
                     if(distance_test>1.0):
                         name="Unknown"
-
+                    if name!="Unknown":    
+                        addInfo_In(name)
                     cv2.rectangle(frame, (y0, x0), (y1, x1), (200, 0, 200), 4)
                     cv2.rectangle(frame, (y0, x0 + 35), (y1, x0), (200, 0, 200), cv2.FILLED)
                     font = cv2.FONT_HERSHEY_DUPLEX
                     cv2.putText(frame, name , (y0 + 6, x0 +25), font, 1.0, (255, 255, 255), 1)
                     cv2.putText(frame, str(round(distance_test,4)) , (y0 + 6, x0 -10), font, 1.0, (255, 0, 255), 1)
+            
+            for student in students:
+                addInfo_Out(student.msv)
+            
             ret,buffer=cv2.imencode('.jpg',frame)
             frame=buffer.tobytes()
 
             yield(b'--frame\r\n'
                     b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
+@blueprint.route('/end')
+def end():
+    for student in students:
+        addInfo_Out(student.msv)
+    return redirect(url_for('authentication_blueprint.login'))
 @blueprint.route('/attendance')
 def attendance():
     return render_template('face_recognition/face.html')
@@ -161,9 +179,6 @@ def attendance():
 def video_feed():
     return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-def addinform():
-    students=Students.query.all()
-    return students
 #-------------------------------------------------------------------------------------
 
 # Login & Registration
