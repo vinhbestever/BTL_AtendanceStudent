@@ -247,8 +247,29 @@ def edit_user(id):
 @login_required
 def chart_analysis():
     segment = get_segment(request)
-    a=100
-    return render_template('home/chart-analysis.html', segment=segment, a=a)
+    atten_table=Attendance.query.all()
+    labels1=['0','1','2','3','4','5','6','7','8','9']
+    values1=[]
+    labels = [
+    'JAN', 'FEB', 'MAR', 'APR',
+    'MAY', 'JUN', 'JUL', 'AUG',
+    'SEP', 'OCT', 'NOV', 'DEC'
+    ]
+
+    values = [
+        967.67, 1190.89, 1079.75, 1349.19,
+        2328.91, 2504.28, 2873.83, 4764.87,
+        4349.29, 6458.30, 9907, 16297
+    ]
+
+    colors = [
+        "#F7464A", "#46BFBD", "#FDB45C", "#FEDCBA",
+        "#ABCDEF", "#DDDDDD", "#ABCABC", "#4169E1",
+        "#C71585", "#FF4500", "#FEDCBA", "#46BFBD"]
+    bar_labels=labels
+    bar_values=values
+
+    return render_template('home/chart-analysis.html', segment=segment, max=17000, labels=bar_labels, values=bar_values)
 @blueprint.route('/<template>')
 @login_required
 def route_template(template):
