@@ -33,12 +33,12 @@ def route_default():
 
 #-------------------------------------------------------------------------------------
 global fd
-# fd = face_detector.FaceAlignmentDetector(
-#     lmd_weights_path="./models/detector/FAN/2DFAN-4_keras.h5"# 2DFAN-4_keras.h5, 2DFAN-1_keras.h5
-# )
+fd = face_detector.FaceAlignmentDetector(
+    lmd_weights_path="./models/detector/FAN/2DFAN-4_keras.h5"# 2DFAN-4_keras.h5, 2DFAN-1_keras.h5
+)
 global fv
-# fv = FaceVerifier(classes=512, extractor = "facenet")
-# fv.set_detector(fd)
+fv = FaceVerifier(classes=512, extractor = "facenet")
+fv.set_detector(fd)
 global students
 students=Students.query.all()
 global img_crop
