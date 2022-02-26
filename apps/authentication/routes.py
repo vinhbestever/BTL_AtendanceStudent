@@ -92,6 +92,9 @@ def gen_frames():
     camera = cv2.VideoCapture(0)
     camera.set(cv2.CAP_PROP_FPS, 5)
     num_people=1000
+
+    stu_new=[]
+    stu_old=[]
     while True:
         success,frame=camera.read()
         
@@ -153,14 +156,19 @@ def gen_frames():
                         name="Unknown"
                     if name!="Unknown":    
                         addInfo_In(name)
+                        stu_new.append(name)
+                    
                     cv2.rectangle(frame, (y0, x0), (y1, x1), (200, 0, 200), 4)
                     cv2.rectangle(frame, (y0, x0 + 35), (y1, x0), (200, 0, 200), cv2.FILLED)
                     font = cv2.FONT_HERSHEY_DUPLEX
                     cv2.putText(frame, name , (y0 + 6, x0 +25), font, 1.0, (255, 255, 255), 1)
                     cv2.putText(frame, str(round(distance_test,4)) , (y0 + 6, x0 -10), font, 1.0, (255, 0, 255), 1)
             
-            for student in students:
-                addInfo_Out(student.msv)
+            for i in stu_old:
+                if i not in stu_new:
+                    addInfo_Out(i)
+            stu_old=stu_new
+            stu_new=[]
             
             ret,buffer=cv2.imencode('.jpg',frame)
             frame=buffer.tobytes()
